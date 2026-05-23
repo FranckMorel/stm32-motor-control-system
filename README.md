@@ -77,3 +77,9 @@ Status Menu
 ## Hardware Prototype
 
 ![Motor Control System](motor_control_setup.jpeg)
+
+Author
+
+Morel Tonfack
+
+GitHub: https://github.com/FranckMorel
