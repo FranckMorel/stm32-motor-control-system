@@ -19,11 +19,11 @@ The system is designed around a stepper motor application and can be extended fo
 - Stepper motor control with configurable movement profiles
 - Operating modes: ECO / NORMAL / FAST
 - TFT graphical menu interface
-- Rotary encoder menu navigation (in progress)
+- Rotary encoder menu navigation
 - Status monitoring screen
 - Direction control
 - Start / Stop motor commands
-- Expandable role-based access control (RFID planned)
+- Expandable role-based access control using RFID (in progress)
 
 ---
 
