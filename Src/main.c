@@ -1,4 +1,34 @@
-/*
+#include <r_encoder.h>
+#include "board_gpio.h"
+#include "timer.h"
+#include "motor_control.h"
+#include "tft.h"
+#include "ui.h"
+
+
+
+int main(void)
+{
+	board_gpio_init();
+    tim2_init();
+    tft_init();
+    encoder_init();
+    MotorControl_init();
+    UI_DrawMenu();
+
+
+    while(1)
+    {
+    	 encoder_task();
+    	 encoder_button_task();
+    	 MotorControl_Task();
+
+    }
+}
+
+
+/*Draft
+
 NOTES:
 APB -> Advanced Peripheral Bus
 AHB -> Advanced High Performance Bus ( schnellere Clock Zyklen )
@@ -91,34 +121,5 @@ int main(void){
 }
 
 */
-
-#include <board_gpio.h>
-#include <timer.h>
-#include <motor_control.h>
-#include <tft.h>
-#include <ui.h>
-#include <encoder.h>
-//#include <stm32f401xe.h>
-
-
-
-int main(void)
-{
-	board_gpio_init();
-    tim2_init();
-    tft_init();
-    encoder_init();
-    MotorControl_init();
-    UI_DrawMenu();
-
-
-    while(1)
-    {
-    	 encoder_task();
-    	 encoder_button_task();
-    	 MotorControl_Task();
-
-    }
-}
 
 

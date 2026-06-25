@@ -1,3 +1,21 @@
+/******************************************************************************
+ * @file    font.c
+ * @author  Morel
+ * @brief   8x16 bitmap font table for ASCII characters.
+ *
+ * This file contains a fixed 8x16 pixel bitmap font for printable ASCII
+ * characters from 32 (' ') to 126 ('~'). Each character is represented by
+ * 16 bytes, where each byte describes one horizontal pixel row.
+ *
+ * The table index is calculated as:
+ *
+ *     index = ascii_character - 32
+ *
+ * Example:
+ *     'A' has ASCII code 65
+ *     index = 65 - 32 = 33
+ ******************************************************************************/
+
 #include "font.h"
 
 const uint8_t Font8x16[96][16] = {

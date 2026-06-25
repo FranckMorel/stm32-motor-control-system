@@ -1,35 +1,22 @@
-/*
- * stepper.h
- *
- *  Created on: Apr 18, 2026
- *      Author: Morel
- */
-
+/******************************************************************************
+ * @file    stepper.h
+ * @author  Morel
+ * @brief   Public interface for the stepper motor driver.
+ ******************************************************************************/
 
 #ifndef STEPPER_H_
 #define STEPPER_H_
 
 #include <stdint.h>
 
-//A0,A1,A2,A3
-#define IN1_AN			(GPIOA -> BSRR = (1U<<0))
-#define IN1_AUS			(GPIOA -> BSRR = (1U<<16))
-#define IN2_AN			(GPIOA -> BSRR = (1U<<1))
-#define IN2_AUS			(GPIOA -> BSRR = (1U<<17))
-#define IN3_AN			(GPIOA -> BSRR = (1U<<4))
-#define IN3_AUS			(GPIOA -> BSRR = (1U<<20))
-#define IN4_AN			(GPIOB -> BSRR = (1U<<0))
-#define IN4_AUS			(GPIOB -> BSRR = (1U<<16))
-
 void stepper_gpio_init(void);
 void stepper_init(void);
-void stepperStop(void);
-void stepForward(void);
-void stepBackward(void);
-void moveForward(uint16_t steps, uint32_t stepDelay_ms);
-void moveBackward(uint16_t steps, uint32_t stepDelay_ms);
+void stepper_stop(void);
 
+void stepper_step_forward(void);
+void stepper_step_backward(void);
 
-
+void stepper_move_forward(uint16_t steps, uint32_t delay_ms_per_step);
+void stepper_move_backward(uint16_t steps, uint32_t delay_ms_per_step);
 
 #endif /* STEPPER_H_ */

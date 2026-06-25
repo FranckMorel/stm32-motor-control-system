@@ -1,15 +1,15 @@
-/*
- * board_gpio.h
- *
- *  Created on: May 5, 2026
- *      Author: kzvvftre
- */
+/******************************************************************************
+ * @file    board_gpio.h
+ * @author  Morel
+ * @brief   Board-level GPIO initialization interface.
+ ******************************************************************************/
 
 #ifndef BOARD_GPIO_H_
 #define BOARD_GPIO_H_
 
-
-static void enable_clocks(void);
+/******************************************************************************
+ * @brief Initializes all GPIO peripherals used by the application.
+ ******************************************************************************/
 void board_gpio_init(void);
 
 #endif /* BOARD_GPIO_H_ */

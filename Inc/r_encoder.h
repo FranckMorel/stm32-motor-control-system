@@ -1,38 +1,34 @@
 /******************************************************************************
- * @file    spi.h
+ * @file    r_encoder.h
  * @author  Morel
- * @brief   Public interface for the SPI1 driver.
+ * @brief   Public interface for the rotary encoder driver.
  ******************************************************************************/
 
-#ifndef SPI_H_
-#define SPI_H_
-
-#include <stdint.h>
+#ifndef R_ENCODER_H_
+#define R_ENCODER_H_
 
 /******************************************************************************
- * @brief Configures GPIO pins used by SPI1.
+ * @brief Configures the GPIO pins used by the rotary encoder.
  ******************************************************************************/
-void spi_gpio_init(void);
+void encoder_gpio_init(void);
 
 /******************************************************************************
- * @brief Configures and enables SPI1.
+ * @brief Initializes the encoder software state.
  ******************************************************************************/
-void spi1_config(void);
+void encoder_init(void);
 
 /******************************************************************************
- * @brief Transmits a data buffer over SPI1.
+ * @brief Processes rotary encoder rotation events.
  *
- * @param data Pointer to the transmit data buffer.
- * @param size Number of bytes to transmit.
+ * This function should be called periodically from the main loop.
  ******************************************************************************/
-void spi1_transmit(const uint8_t *data, uint32_t size);
+void encoder_task(void);
 
 /******************************************************************************
- * @brief Receives data over SPI1.
+ * @brief Processes the rotary encoder push button.
  *
- * @param data Pointer to the receive buffer.
- * @param size Number of bytes to receive.
+ * This function should be called periodically from the main loop.
  ******************************************************************************/
-void spi1_receive(uint8_t *data, uint32_t size);
+void encoder_button_task(void);
 
-#endif /* SPI_H_ */
+#endif /* R_ENCODER_H_ */

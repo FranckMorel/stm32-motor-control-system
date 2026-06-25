@@ -1,49 +1,50 @@
-/*
- * tft.h
- *
- *  Created on: Apr 23, 2026
- *      Author: Morel
- */
+/******************************************************************************
+ * @file    tft.h
+ * @author  Morel
+ * @brief   Public interface for the ST7735S TFT display driver.
+ ******************************************************************************/
+
 #ifndef TFT_H_
 #define TFT_H_
 
 #include <stdint.h>
 
-// ab s104 -> ST7735S Datasheet v1.1: COMMANDOS
-#define SWRESET		0x01  // Reset zum Start
-#define SLPOUT		0x11  // Display aus dem Schalf holen
-#define COLMOD		0x3A  // Farbformat einstellen (16-bit)
-#define MADCTL		0x36  // RGB/BGR Reihenfolge
-#define DISPON 		0x29  // Display einschalten
-#define CASET		0x2A  // Spaltenbereich setzen
-#define RASET 		0x2B  // Zeilenbereich setzen
-#define RAMWR		0x2C  // Pixel schreiben
+/* ST7735S command set */
+#define SWRESET     0x01U   /* Software reset */
+#define SLPOUT      0x11U   /* Exit sleep mode */
+#define COLMOD      0x3AU   /* Set color mode */
+#define MADCTL      0x36U   /* Memory access control */
+#define DISPON      0x29U   /* Display on */
+#define CASET       0x2AU   /* Column address set */
+#define RASET       0x2BU   /* Row address set */
+#define RAMWR       0x2CU   /* Memory write */
 
-#define TFT_WIDTH   132   // 132 Pixel breit (Spalten)
-#define TFT_HEIGHT  162   // 162 Pixel hoch (Zeilen)
+/* Display resolution */
+#define TFT_WIDTH   132U
+#define TFT_HEIGHT  162U
 
-
-#define TFT_BLACK   0x0000
-#define TFT_WHITE   0xFFFF
-#define TFT_RED     0xF800
-#define TFT_GREEN   0x07E0
-#define TFT_BLUE    0x001F
-#define TFT_YELLOW  0xFFE0
+/* RGB565 color definitions */
+#define TFT_BLACK   0x0000U
+#define TFT_WHITE   0xFFFFU
+#define TFT_RED     0xF800U
+#define TFT_GREEN   0x07E0U
+#define TFT_BLUE    0x001FU
+#define TFT_YELLOW  0xFFE0U
 
 void tft_gpio_init(void);
 void tft_cs_enable(void);
 void tft_cs_disable(void);
+
 void tft_write_cmd(uint8_t cmd);
 void tft_write_data(uint8_t data);
 void tft_write_data16(uint16_t data);
+
 void tft_reset(void);
 void tft_init(void);
 
 void tft_set_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 void tft_draw_char(uint16_t x, uint16_t y, char ch, uint16_t fg, uint16_t bg);
 void tft_draw_string(uint16_t x, uint16_t y, const char *str, uint16_t fg, uint16_t bg);
-
-void tft_testFullScreenColor(uint16_t color);
-
+void tft_fill_screen(uint16_t color);
 
 #endif /* TFT_H_ */

@@ -1,132 +1,199 @@
+/******************************************************************************
+ * @file    stepper.c
+ * @author  Morel
+ * @brief   Stepper motor driver for 28BYJ-48 / ULN2003 control.
+ *
+ * This module controls a unipolar stepper motor using a 4-phase output
+ * sequence. The motor is driven in half-step mode to achieve smoother motion
+ * and higher angular resolution.
+ ******************************************************************************/
+
 #include <stm32f401xe.h>
+#include <stdint.h>
 #include <stepper.h>
+#include <timer.h>
 
+#define IN1_PIN    0U      /* PA0 */
+#define IN2_PIN    1U      /* PA1 */
+#define IN3_PIN    4U      /* PA4 */
+#define IN4_PIN    0U      /* PB0 */
 
-#define IN1_PIN    0
-#define IN2_PIN    1
-#define IN3_PIN    4
-#define IN4_PIN    0
+#define IN1_ON      (GPIOA->BSRR = (1U << 0U))
+#define IN1_OFF     (GPIOA->BSRR = (1U << 16U))
+#define IN2_ON      (GPIOA->BSRR = (1U << 1U))
+#define IN2_OFF     (GPIOA->BSRR = (1U << 17U))
+#define IN3_ON      (GPIOA->BSRR = (1U << 4U))
+#define IN3_OFF     (GPIOA->BSRR = (1U << 20U))
+#define IN4_ON      (GPIOB->BSRR = (1U << 0U))
+#define IN4_OFF     (GPIOB->BSRR = (1U << 16U))
 
+#define STEPPER_PHASE_COUNT   8U
+#define STEPPER_COIL_COUNT    4U
 
-static int stepIndex = 0;
-volatile uint32_t stepDelay_ms = 1;
-
+static uint8_t step_index = 0U;
 
 /*
-static void speedDelay(void){
-	for(int i=0; i<2000; i++){}
-}
-*/
-
-// Pattern for Half drive Sequence
-
-uint8_t phase[8][4] = {
-	  {1, 0, 0, 0},  // Schritt 1
-	  {1, 1, 0, 0},  // Schritt 2
-	  {0, 1, 0, 0},  // Schritt 3
-	  {0, 1, 1, 0},  // Schritt 4
-	  {0, 0, 1, 0},  // Schritt 5
-	  {0, 0, 1, 1},  // Schritt 6
-	  {0, 0, 0, 1},  // Schritt 7
-	  {1, 0, 0, 1}   // Schritt 8
+ * Half-step sequence for 28BYJ-48 stepper motor.
+ *
+ * Each row represents the output state of IN1, IN2, IN3 and IN4.
+ * Half-step mode alternates between single-coil and dual-coil activation.
+ */
+static const uint8_t phase[STEPPER_PHASE_COUNT][STEPPER_COIL_COUNT] =
+{
+    {1U, 0U, 0U, 0U},
+    {1U, 1U, 0U, 0U},
+    {0U, 1U, 0U, 0U},
+    {0U, 1U, 1U, 0U},
+    {0U, 0U, 1U, 0U},
+    {0U, 0U, 1U, 1U},
+    {0U, 0U, 0U, 1U},
+    {1U, 0U, 0U, 1U}
 };
 
-// Pattern for Full drive sequence
-/*
-uint8_t phase[4][4] = {
-	  {1, 1, 0, 0},  // Schritt 1
-	  {0, 1, 1, 0},  // Schritt 2
-	  {0, 0, 1, 1},  // Schritt 3
-	  {1, 0, 0, 1},  // Schritt 4
-};
-*/
-static void step_Output(int stepIndex){
+/******************************************************************************
+ * @brief Applies one phase pattern to the stepper motor driver inputs.
+ *
+ * @param index Index of the phase pattern to apply.
+ ******************************************************************************/
+static void stepper_apply_phase(uint8_t index)
+{
+    if (phase[index][0U] != 0U)
+    {
+    	IN1_ON;
+    }
+    else
+    {
+    	IN1_OFF;
+    }
 
-	    if(phase[stepIndex][0]) IN1_AN;
-	    else               		IN1_AUS;
+    if (phase[index][1U] != 0U)
+    {
+    	IN2_ON;
+    }
+    else
+    {
+    	IN2_OFF;
+    }
 
-	    if(phase[stepIndex][1]) IN2_AN;
-	    else               		IN2_AUS;
+    if (phase[index][2U] != 0U)
+    {
+    	IN3_ON;
+    }
+    else
+    {
+    	IN3_OFF;
+    }
 
-	    if(phase[stepIndex][2]) IN3_AN;
-	    else               		IN3_AUS;
-
-	    if(phase[stepIndex][3]) IN4_AN;
-	    else               		IN4_AUS;
-
+    if (phase[index][3U] != 0U)
+    {
+        IN4_ON;
+    }
+    else
+    {
+        IN4_OFF;
+    }
 }
 
-void stepper_gpio_init(void){
+/******************************************************************************
+ * @brief Configures the GPIO pins used for stepper motor control.
+ ******************************************************************************/
+void stepper_gpio_init(void)
+{
+    /* IN1: PA0 output */
+    GPIOA->MODER &= ~(3U << (IN1_PIN * 2U));
+    GPIOA->MODER |=  (1U << (IN1_PIN * 2U));
 
-	GPIOA -> MODER &= ~(3U << (IN1_PIN*2));
-	GPIOA -> MODER |=  (1U <<(IN1_PIN*2));
+    /* IN2: PA1 output */
+    GPIOA->MODER &= ~(3U << (IN2_PIN * 2U));
+    GPIOA->MODER |=  (1U << (IN2_PIN * 2U));
 
-	GPIOA -> MODER &= ~(3U << (IN2_PIN*2));
-	GPIOA -> MODER |=  (1U <<(IN2_PIN*2));
+    /* IN3: PA4 output */
+    GPIOA->MODER &= ~(3U << (IN3_PIN * 2U));
+    GPIOA->MODER |=  (1U << (IN3_PIN * 2U));
 
-	GPIOA -> MODER &= ~(3U << (IN3_PIN*2));
-	GPIOA -> MODER |=  (1U <<(IN3_PIN*2));
-
-	GPIOB -> MODER &= ~(3U << (IN4_PIN*2));
-	GPIOB -> MODER |=  (1U <<(IN4_PIN*2));
-
+    /* IN4: PB0 output */
+    GPIOB->MODER &= ~(3U << (IN4_PIN * 2U));
+    GPIOB->MODER |=  (1U << (IN4_PIN * 2U));
 }
 
-
-void stepper_init(void){
-
-	stepIndex = 0;
-	step_Output(stepIndex);
-
+/******************************************************************************
+ * @brief Initializes the stepper motor driver state.
+ ******************************************************************************/
+void stepper_init(void)
+{
+    step_index = 0U;
+    stepper_apply_phase(step_index);
 }
 
-void stepperStop(void){
-
-	IN1_AUS; IN2_AUS; IN3_AUS; IN4_AUS;
-
+/******************************************************************************
+ * @brief Disables all stepper motor coils.
+ ******************************************************************************/
+void stepper_stop(void)
+{
+    IN1_AUS;
+    IN2_AUS;
+    IN3_AUS;
+    IN4_AUS;
 }
 
-void stepForward(void){
-	stepIndex++;
-	if(stepIndex >= 8){
+/******************************************************************************
+ * @brief Moves the motor by one half-step in forward direction.
+ ******************************************************************************/
+void stepper_step_forward(void)
+{
+    step_index++;
 
-		stepIndex = 0;
-	}
+    if (step_index >= STEPPER_PHASE_COUNT)
+    {
+        step_index = 0U;
+    }
 
-	step_Output(stepIndex);
-	//speedDelay();
-
+    stepper_apply_phase(step_index);
 }
 
-void stepBackward(void){
-	stepIndex--;
-	if(stepIndex < 0){
+/******************************************************************************
+ * @brief Moves the motor by one half-step in backward direction.
+ ******************************************************************************/
+void stepper_step_backward(void)
+{
+    if (step_index == 0U)
+    {
+        step_index = STEPPER_PHASE_COUNT - 1U;
+    }
+    else
+    {
+        step_index--;
+    }
 
-		stepIndex = 7;
-	}
-
-	step_Output(stepIndex);
-	//speedDelay();
-
+    stepper_apply_phase(step_index);
 }
 
-
-void moveForward(uint16_t steps, uint32_t stepDelay_ms){
-  for(uint16_t i = 0; i < steps; i++){
-
-	    stepForward();
-	    delay_ms(stepDelay_ms);
-     }
-
+/******************************************************************************
+ * @brief Moves the motor forward by a given number of half-steps.
+ *
+ * @param steps Number of half-steps.
+ * @param delay_ms_per_step Delay between two half-steps in milliseconds.
+ ******************************************************************************/
+void stepper_move_forward(uint16_t steps, uint32_t delay_ms_per_step)
+{
+    for (uint16_t i = 0U; i < steps; i++)
+    {
+        stepForward();
+        delay_ms(delay_ms_per_step);
+    }
 }
 
-void moveBackward(uint16_t steps, uint32_t stepDelay_ms){
-	for(uint16_t i = 0; i < steps; i++){
-
-		stepBackward();
-		delay_ms(stepDelay_ms);
-	  }
+/******************************************************************************
+ * @brief Moves the motor backward by a given number of half-steps.
+ *
+ * @param steps Number of half-steps.
+ * @param delay_ms_per_step Delay between two half-steps in milliseconds.
+ ******************************************************************************/
+void stepper_move_backward(uint16_t steps, uint32_t delay_ms_per_step)
+{
+    for (uint16_t i = 0U; i < steps; i++)
+    {
+        stepBackward();
+        delay_ms(delay_ms_per_step);
+    }
 }
-
-
-
