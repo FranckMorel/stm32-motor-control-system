@@ -1,30 +1,51 @@
-#include <r_encoder.h>
+/******************************************************************************
+ * @file    main.c
+ * @author  Morel
+ * @brief   Main entry point for the STM32 motor control system.
+ *
+ * This application controls a stepper motor through a TFT-based user interface
+ * and a rotary encoder. The software is structured into board initialization,
+ * peripheral drivers, UI handling and application-level motor control.
+ ******************************************************************************/
+
 #include "board_gpio.h"
 #include "timer.h"
 #include "motor_control.h"
 #include "tft.h"
 #include "ui.h"
+#include "r_encoder.h"
 
-
-
+/******************************************************************************
+ * @brief Main application entry point.
+ *
+ * Initializes all board peripherals and then runs the main super-loop.
+ * The encoder and motor control modules are implemented as non-blocking
+ * periodic tasks.
+ *
+ * @return This function does not return.
+ ******************************************************************************/
 int main(void)
 {
-	board_gpio_init();
+    board_gpio_init();
     tim2_init();
+
     tft_init();
     encoder_init();
     MotorControl_init();
+
     UI_DrawMenu();
 
+    __enable_irq();
 
-    while(1)
+    while (1)
     {
-    	 encoder_task();
-    	 encoder_button_task();
-    	 MotorControl_Task();
-
+        encoder_task();
+        encoder_button_task();
+        MotorControl_Task();
     }
 }
+
+
 
 
 /*Draft
